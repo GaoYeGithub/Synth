@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Synth Pad</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #000;
+        color: #fff;
+        display: flex;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        height: 100%;
+      }
+
+      .pad {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #444;
+      }
+
+      .label {
+        font-size: 24px;
+        user-select: none;
+      }
+
+      .synth-pad {
+        background-color: #1e1e1e;
+      }
+
+      .string-pad {
+        background-color: #2e2e2e;
+      }
+
+      .chord-pad {
+        background-color: #3e3e3e;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="synth-pad" class="pad synth-pad">
+        <div id="synth-label" class="label">Synth</div>
+      </div>
+      <div id="string-pad" class="pad string-pad">
+        <div id="string-label" class="label">String</div>
+      </div>
+      <div id="chord-pad" class="pad chord-pad">
+        <div id="chord-label" class="label">Chord</div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
+    <script>
+      document.body.addEventListener('click', async () => {
+        if (Tone.context.state !== 'running') {
+          await Tone.context.resume();
+        }
+      });
+
+      const synth = new Tone.Synth().toDestination();
+      const stringSynth = new Tone.PluckSynth().toDestination();
+      const chordSynth = new Tone.PolySynth(Tone.Synth).toDestination();
+
+      var synthPad = document.getElementById('synth-pad');
+      var synthLabel = document.getElementById('synth-label');
+
+      var stringPad = document.getElementById('string-pad');
+      var stringLabel = document.getElementById('string-label');
+
+      var chordPad = document.getElementById('chord-pad');
+      var chordLabel = document.getElementById('chord-label');
+
+      function playSynth(x) {
+        const frequency = 440 * Math.pow(2, (x - window.innerWidth / 2) / window.innerWidth);
+        synth.triggerAttack(frequency);
+        synthLabel.innerHTML = 'Synth: ' + Math.round(frequency) + 'Hz';
+      }
+
+      function playString(x) {
+        const frequency = 440 * Math.pow(2, (x - window.innerWidth / 2) / window.innerWidth);
+        stringSynth.triggerAttack(frequency);
+        stringLabel.innerHTML = 'String: ' + Math.round(frequency) + 'Hz';
+      }
+
+      function playChord(x) {
+        const root = 440 * Math.pow(2, (x - window.innerWidth / 2) / window.innerWidth);
+        const chord = [root, root * 1.25, root * 1.5];
+        chordSynth.triggerAttack(chord);
+        chordLabel.innerHTML = 'Chord: ' + chord.map(f => Math.round(f)).join(', ') + 'Hz';
+      }
+
+      function handleDown(event, playFunction) {
+        const x = event.pageX;
+        playFunction(x);
+      }
+
+      function handleUp(event) {
+        synth.triggerRelease();
+        stringSynth.triggerRelease();
+        chordSynth.releaseAll();
+
+        synthLabel.innerHTML = 'Synth';
+        stringLabel.innerHTML = 'String';
+        chordLabel.innerHTML = 'Chord';
+      }
+
+      function handleMove(event, playFunction) {
+        const x = event.pageX;
+        playFunction(x);
+      }
+
+      synthPad.addEventListener('pointerdown', (event) => handleDown(event, playSynth));
+      stringPad.addEventListener('pointerdown', (event) => handleDown(event, playString));
+      chordPad.addEventListener('pointerdown', (event) => handleDown(event, playChord));
+
+      synthPad.addEventListener('pointerup', handleUp);
+      stringPad.addEventListener('pointerup', handleUp);
+      chordPad.addEventListener('pointerup', handleUp);
+
+      synthPad.addEventListener('pointermove', (event) => handleMove(event, playSynth));
+      stringPad.addEventListener('pointermove', (event) => handleMove(event, playString));
+      chordPad.addEventListener('pointermove', (event) => handleMove(event, playChord));
+    </script>
+  </body>
+</html>
